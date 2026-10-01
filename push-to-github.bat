@@ -135,7 +135,7 @@ echo ------------------------------------------------------------
 echo.
 echo   Next step - set the publishing source, one click:
 echo     https://github.com/!GHUSER!/!REPO!/settings/pages
-echo     Build and deployment  ->  Source  ->  GitHub Actions
+echo     Build and deployment  -^>  Source  -^>  GitHub Actions
 echo.
 echo   Your site will be at:
 echo     https://!GHUSER!.github.io/!REPO!/

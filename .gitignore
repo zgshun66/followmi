@@ -17,3 +17,9 @@ push-out.txt
 Thumbs.db
 .vscode/
 .idea/
+
+# 设计素材：猫咪剪影的描摹参考图，只在本地重新生成图标时才需要，不随仓库分发
+assets/cats/
+
+# 开发期界面核对截图
+screenshots/

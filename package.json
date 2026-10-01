@@ -6,7 +6,7 @@
   "description": "健身跟练打卡 - 纯前端单页 PWA",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/gen-icons.mjs && vite build",
+    "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "gen:icons": "node scripts/gen-icons.mjs",
