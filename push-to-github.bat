@@ -98,6 +98,17 @@ set "GIT_TERMINAL_PROMPT=1"
 
 "!GITEXE!" push -u origin main > "%OUT%" 2>&1
 set "RC=!errorlevel!"
+
+if not "!RC!"=="0" (
+  echo.
+  echo       Push was rejected - retrying with --force ...
+  echo       (normal when the local history has been rewritten)
+  echo.
+  call :log "[4/4] rejected, retrying with --force"
+  "!GITEXE!" push -u origin main --force >> "%OUT%" 2>&1
+  set "RC=!errorlevel!"
+)
+
 type "%OUT%"
 type "%OUT%" >> "%LOG%"
 call :log "[4/4] push exit code = !RC!"
@@ -168,6 +179,10 @@ call :log "[tok] retrying with token"
 "!GITEXE!" remote set-url origin "https://!TOK!@github.com/!GHUSER!/!REPO!.git"
 "!GITEXE!" push -u origin main > "%OUT%" 2>&1
 set "RC2=!errorlevel!"
+if not "!RC2!"=="0" (
+  "!GITEXE!" push -u origin main --force >> "%OUT%" 2>&1
+  set "RC2=!errorlevel!"
+)
 "!GITEXE!" remote set-url origin "!REMOTE!"
 type "%OUT%"
 type "%OUT%" >> "%LOG%"
