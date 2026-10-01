@@ -113,6 +113,13 @@ type "%OUT%"
 type "%OUT%" >> "%LOG%"
 call :log "[4/4] push exit code = !RC!"
 
+rem  收尾阶段断线也会返回非 0，但数据可能早已送达（输出里有 main -> main）。
+rem  先核实远程，再决定要不要报失败。
+set "PUSHOK=0"
+if not "!RC!"=="0" call :verify
+if "!PUSHOK!"=="1" set "RC=0"
+call :log "[4/4] final exit code = !RC!"
+
 echo.
 if "!RC!"=="0" goto :pushok
 
@@ -121,6 +128,8 @@ echo   Push FAILED   (exit code !RC!)
 echo ------------------------------------------------------------
 echo.
 echo   Common causes:
+echo     - The network dropped while talking to GitHub. This is the most
+echo       likely one here - just run this script again.
 echo     - The repo "!REPO!" does not exist yet on GitHub, or its name
 echo       is spelled differently. Create it (public, empty) first:
 echo       https://github.com/new
@@ -144,13 +153,15 @@ echo ------------------------------------------------------------
 echo   Push OK
 echo ------------------------------------------------------------
 echo.
-echo   Next step - set the publishing source, one click:
+echo   Your site:
+echo     https://!GHUSER!.github.io/!REPO!/
+echo.
+echo   First time only - set the publishing source, one click:
 echo     https://github.com/!GHUSER!/!REPO!/settings/pages
 echo     Build and deployment  -^>  Source  -^>  GitHub Actions
 echo.
-echo   Your site will be at:
-echo     https://!GHUSER!.github.io/!REPO!/
-echo     (the first build takes 1-2 minutes)
+echo   After that, every push rebuilds the site by itself.
+echo   Give it 1-2 minutes, then refresh the page.
 echo.
 call :log "[OK] push succeeded"
 
@@ -163,6 +174,45 @@ echo.
 pause
 endlocal
 exit /b
+
+
+rem ==================================================================
+rem  helper: did a failed-looking push actually deliver?
+rem ==================================================================
+:verify
+rem  输出里出现 "main -> main"（且不是 rejected 行），说明远程引用已被更新
+findstr /C:"main -> main" "%OUT%" | findstr /V /C:"rejected" >nul 2>&1
+if errorlevel 1 exit /b 0
+
+echo.
+echo       The output shows a ref update (main -^> main), so the push may
+echo       have finished before the connection dropped.
+echo       Asking the remote what it has ... (may take a moment)
+set "LOCALHEAD="
+for /f "delims=" %%h in ('"!GITEXE!" rev-parse HEAD 2^>nul') do set "LOCALHEAD=%%h"
+set "REMOTEHEAD="
+for /f "tokens=1" %%h in ('"!GITEXE!" -c http.version=HTTP/1.1 ls-remote origin refs/heads/main 2^>nul') do set "REMOTEHEAD=%%h"
+call :log "[verify] local=!LOCALHEAD! remote=!REMOTEHEAD!"
+
+if not defined REMOTEHEAD (
+  echo       Could not reach GitHub to confirm - the network looks down.
+  echo       Check it in the browser instead:
+  echo         https://github.com/!GHUSER!/!REPO!
+  echo       If your newest commit is listed there, the push succeeded and
+  echo       you can close this window.
+  call :log "[verify] inconclusive, remote unreachable"
+  exit /b 0
+)
+
+if /i "!LOCALHEAD!"=="!REMOTEHEAD!" (
+  echo       Remote already has !REMOTEHEAD! - the push DID succeed.
+  set "PUSHOK=1"
+  call :log "[verify] confirmed OK"
+) else (
+  echo       Remote is at !REMOTEHEAD!, local is !LOCALHEAD! - not delivered.
+  call :log "[verify] mismatch"
+)
+exit /b 0
 
 
 rem ==================================================================
