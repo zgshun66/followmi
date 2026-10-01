@@ -37,6 +37,11 @@ jobs:
         # npm install 会按当前平台补齐可选依赖。
         run: npm install --no-audit --no-fund
 
+      - name: Verify esbuild platform binary
+        # 提前失败：若 esbuild 的 linux 二进制没装上，这里会明确报错，
+        # 而不是等到 vite build 时抛出含糊的跨平台错误。
+        run: node -e "const e=require('esbuild'); console.log('esbuild', e.version, 'ready')"
+
       # 注意：npm run build 会先跑 scripts/gen-icons.mjs 生成图标与形状文件，
       # 因此 assets/cats/*.jpg（描摹用的参考图）必须一并提交进仓库。
       - name: Build
