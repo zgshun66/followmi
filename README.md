@@ -110,7 +110,9 @@ node scripts/gen-icons.mjs --preview   # 额外输出图标/爪印预览图到 .
 
 ### 首次部署（一次性设置）
 
-1. 在 GitHub 上新建一个**空仓库**（**不要**勾选 Add a README / .gitignore），仓库名建议 `followmi`。
+1. 在 GitHub 上新建一个**空仓库**，仓库名 `followmi`：
+   - **可见性必须选 `Public`**。GitHub 免费账号的 Pages 只支持公开仓库；从私有仓库发布 Pages 需要 Pro / Team / Enterprise。本项目不含任何密钥或个人信息（你的打卡数据全部存在自己手机浏览器的 IndexedDB 里，服务器上只有静态文件），公开是安全的。
+   - **不要**勾选 `Add a README file` / `.gitignore` / `license` 等任何初始化选项，否则仓库非空，首次推送会冲突。
 2. 在本机项目目录关联远程并推送：
 
    ```bash
