@@ -1,0 +1,17 @@
+# 依赖
+node_modules/
+
+# 构建产物（由 GitHub Actions 在 CI 上重新构建）
+dist/
+
+# 本地预览 / 核对产物（含无头浏览器 profile）
+scripts/.preview/
+.preview/
+scripts/dev/edge-profile/
+
+# 杂项
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

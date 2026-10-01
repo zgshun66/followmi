@@ -1,0 +1,134 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #fdfbf2;
+  color: #4a5130;
+  -webkit-font-smoothing: antialiased;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 嵌入播放外壳：固定 16:9，强制 iframe 铺满，解决“视频非常小”的问题 */
+.embed-shell {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #171a10;
+  border-radius: 1rem;
+  overflow: hidden;
+}
+.embed-shell iframe {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  border: 0;
+}
+
+/* ---------- 动画 ---------- */
+@keyframes pawStamp {
+  0% {
+    transform: scale(2.6) rotate(-22deg);
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+  65% {
+    transform: scale(0.9) rotate(-4deg);
+  }
+  82% {
+    transform: scale(1.05) rotate(-11deg);
+  }
+  100% {
+    transform: scale(1) rotate(-8deg);
+    opacity: 1;
+  }
+}
+@keyframes flashOut {
+  0% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes popIn {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@keyframes riseFade {
+  0% {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+@keyframes floatY {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+@keyframes wiggle {
+  0%,
+  100% {
+    transform: rotate(-5deg);
+  }
+  50% {
+    transform: rotate(5deg);
+  }
+}
+
+.anim-paw {
+  animation: pawStamp 0.5s cubic-bezier(0.2, 1.5, 0.5, 1) forwards;
+}
+.anim-flash {
+  animation: flashOut 0.7s ease-out forwards;
+}
+.anim-pop {
+  animation: popIn 0.28s ease-out;
+}
+.anim-rise {
+  animation: riseFade 0.3s ease-out;
+}
+.anim-float {
+  animation: floatY 2.6s ease-in-out infinite;
+}
+.anim-wiggle {
+  animation: wiggle 1.8s ease-in-out infinite;
+}
+
+/* 隐藏横向滚动条但保留滚动 */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
