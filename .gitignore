@@ -11,6 +11,8 @@ scripts/dev/edge-profile/
 
 # 杂项
 *.log
+push-log.txt
+push-out.txt
 .DS_Store
 Thumbs.db
 .vscode/
