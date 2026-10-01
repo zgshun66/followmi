@@ -19,8 +19,10 @@
     "react-chartjs-2": "^5.2.0",
     "react-dom": "^18.3.1"
   },
+  "optionalDependencies": {
+    "@esbuild/win32-x64": "^0.21.5"
+  },
   "devDependencies": {
-    "@esbuild/win32-x64": "^0.21.5",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",

@@ -31,7 +31,11 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        # 用 npm install 而非 npm ci：package-lock.json 是在 Windows 上生成的，
+        # 只记录了 win32 平台的可选二进制（@esbuild/win32-x64），缺少
+        # @esbuild/linux-x64 条目，npm ci 在 Linux runner 上会因此失败。
+        # npm install 会按当前平台补齐可选依赖。
+        run: npm install --no-audit --no-fund
 
       # 注意：npm run build 会先跑 scripts/gen-icons.mjs 生成图标与形状文件，
       # 因此 assets/cats/*.jpg（描摹用的参考图）必须一并提交进仓库。
