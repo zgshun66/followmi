@@ -2,7 +2,8 @@
 function parseBilibiliBvid(url) {
   if (!url) return null;
   const match = url.match(/(BV[0-9A-Za-z]+)/i);
-  return match ? match[1].toUpperCase() : null;
+  if (!match) return null;
+  return "BV" + match[1].slice(2);
 }
 function isBilibiliUrl(url) {
   return /bilibili\.com|b23\.tv|bili2233\.cn|acg\.tv/i.test(url ?? "");

@@ -69,16 +69,20 @@ function tsDaysAgo(n) {
 // ===================================================================
 console.log('\n===== bilibili.parseBilibiliBvid =====');
 run('标准 bilibili 视频页 URL 解析出 BV 号', () => {
-  eq(U.parseBilibiliBvid('https://www.bilibili.com/video/BV1xx411c7mD'), 'BV1XX411C7MD');
+  eq(U.parseBilibiliBvid('https://www.bilibili.com/video/BV1xx411c7mD'), 'BV1xx411c7mD');
 });
-run('小写 bv 前缀应规范化为大写', () => {
-  eq(U.parseBilibiliBvid('https://www.bilibili.com/video/bv1xx411c7md'), 'BV1XX411C7MD');
+run('BV 号大小写必须原样保留（B 站接口区分大小写，大写即失效）', () => {
+  // 实测：pagelist?bvid=BV1GJ411x7h7 -> code 0；BV1GJ411X7H7 -> code -404
+  eq(U.parseBilibiliBvid('https://www.bilibili.com/video/BV1GJ411x7h7'), 'BV1GJ411x7h7');
 });
-run('b23.tv 短链含 BV 时也能解析', () => {
-  eq(U.parseBilibiliBvid('https://b23.tv/BV1xx411c7mD'), 'BV1XX411C7MD');
+run('仅前缀 bv 规范化为大写；整体被压成小写的链接大小写无法还原（已知局限）', () => {
+  eq(U.parseBilibiliBvid('https://www.bilibili.com/video/bv1xx411c7md'), 'BV1xx411c7md');
+});
+run('b23.tv 短链含 BV 时也能解析（新分享格式，BV 直接写在短链里）', () => {
+  eq(U.parseBilibiliBvid('https://b23.tv/BV1Bnet6wEds'), 'BV1Bnet6wEds');
 });
 run('带查询参数的 URL 不应把参数吞进 BV 号', () => {
-  eq(U.parseBilibiliBvid('https://www.bilibili.com/video/BV1xx411c7mD?p=2&t=10'), 'BV1XX411C7MD');
+  eq(U.parseBilibiliBvid('https://www.bilibili.com/video/BV1xx411c7mD?p=2&t=10'), 'BV1xx411c7mD');
 });
 run('YouTube 链接应返回 null', () => {
   eq(U.parseBilibiliBvid('https://www.youtube.com/watch?v=abc123'), null);
@@ -97,7 +101,7 @@ console.log('\n===== bilibili.buildBilibiliEmbed =====');
 run('B 站链接生成 iframe 嵌入且含 bvid', () => {
   const html = U.buildBilibiliEmbed('https://www.bilibili.com/video/BV1xx411c7mD');
   ok(html && html.startsWith('<iframe'), '应返回 iframe 片段');
-  ok(html.includes('bvid=BV1XX411C7MD'), 'iframe 应包含 bvid 参数');
+  ok(html.includes('bvid=BV1xx411c7mD'), 'iframe 应包含原样的 bvid 参数');
   ok(html.includes('player.bilibili.com'), 'iframe src 应为 B 站播放器');
 });
 run('非 B 站链接返回 null', () => {

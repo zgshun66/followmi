@@ -6,11 +6,24 @@
  * - 用户直接粘贴 iframe / HTML 片段 -> 原样保留渲染
  */
 
-/** 从任意文本中提取 B 站 BV 号（如 BV1xx411c7mD）。 */
+/**
+ * 从任意文本中提取 B 站 BV 号（如 BV1xx411c7mD）。
+ *
+ * 千万不能整体 toUpperCase()：BV 号是大小写敏感的（用的是一张含大小写的 base58
+ * 字母表），改一个字母就是另一个不存在的视频。实测 B 站接口——
+ *   x/player/pagelist?bvid=BV1xx411c7mD  -> code 0    （正常）
+ *   x/player/pagelist?bvid=BV1XX411C7MD  -> code -404 （啥都木有）
+ * 播放器要靠这个接口取分P的 cid，所以大写过的 BV 号在播放器里必然播不出来。
+ * 这里只把前缀规范成大写，其余原样保留。
+ *
+ * 已知局限：链接若已被压成全小写（bv1xx411c7md），原始大小写无从还原，
+ * 只能原样返回，播放器会找不到视频。重新复制一次完整链接即可。
+ */
 export function parseBilibiliBvid(url: string): string | null {
   if (!url) return null;
   const match = url.match(/(BV[0-9A-Za-z]+)/i);
-  return match ? match[1].toUpperCase() : null;
+  if (!match) return null;
+  return 'BV' + match[1].slice(2);
 }
 
 /** 是否 B 站链接（含短链）。 */
