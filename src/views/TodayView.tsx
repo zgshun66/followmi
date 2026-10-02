@@ -27,14 +27,27 @@ export default function TodayView() {
   );
 
   const doCheckin = async (task: Task) => {
-    await addCheckin({
-      taskId: task.id,
-      taskName: task.name,
-      type: task.type,
-      ts: Date.now(),
-    });
-    setFlash(true);
+    try {
+      await addCheckin({
+        taskId: task.id,
+        taskName: task.name,
+        type: task.type,
+        ts: Date.now(),
+      });
+      setFlash(true);
+    } catch (err) {
+      // 打卡失败别静默吞掉：至少留条日志，方便排查为什么次数没涨。
+      console.error('[follow咪] 打卡失败:', err);
+    } finally {
+      // 成功/失败都会走到这里。失败时 checkins 不会刷新、remaining 不变，
+      // 播放器侧那层 2.5s 兜底计时器会负责把按钮解锁，用户不会被永久禁用卡住。
+    }
   };
+
+  // 「正在播放」的任务今日还差几次：始终用最新的 checkins 实时算，
+  // 打卡后 addCheckin → reload 更新 checkins → 这里重渲染重算 → 作为 prop 下发给播放器，
+  // 播放器因此能立刻从「标记完成」切到「再来一次」，而不是抱着旧快照把自己锁死。
+  const playingRemaining = playing ? getRemaining(playing, checkins, today) : 0;
 
   return (
     <div className="space-y-4">
@@ -89,7 +102,11 @@ export default function TodayView() {
                       disabled={finished}
                       className="flex-1 rounded-lg bg-leaf py-1.5 text-sm font-semibold text-cream disabled:opacity-40"
                     >
-                      {task.type === 'upload' ? '播放视频' : '打开 / 播放'}
+                      {done > 0 && !finished
+                        ? '继续练'
+                        : task.type === 'upload'
+                          ? '播放视频'
+                          : '打开 / 播放'}
                     </button>
                     <button
                       type="button"
@@ -112,13 +129,17 @@ export default function TodayView() {
       {playing &&
         (playing.type === 'upload' ? (
           <VideoPlayer
+            key={playing.id}
             task={playing}
+            remaining={playingRemaining}
             onComplete={() => void doCheckin(playing)}
             onClose={() => setPlaying(null)}
           />
         ) : (
           <LinkPlayer
+            key={playing.id}
             task={playing}
+            remaining={playingRemaining}
             onComplete={() => void doCheckin(playing)}
             onClose={() => setPlaying(null)}
           />
