@@ -96,18 +96,22 @@ export default function TodayView() {
                   </div>
 
                   <div className="mt-2 flex gap-2">
+                    {/* 主按钮额度用完也不变灰：文案切「再来一次」，点开播放面板重播。
+                        它只负责打开/重播，不碰打卡；防超额是右边那颗「打卡」按钮的事。 */}
                     <button
                       type="button"
                       onClick={() => setPlaying(task)}
-                      disabled={finished}
-                      className="flex-1 rounded-lg bg-leaf py-1.5 text-sm font-semibold text-cream disabled:opacity-40"
+                      className="flex-1 rounded-lg bg-leaf py-1.5 text-sm font-semibold text-cream"
                     >
-                      {done > 0 && !finished
-                        ? '继续练'
-                        : task.type === 'upload'
-                          ? '播放视频'
-                          : '打开 / 播放'}
+                      {finished
+                        ? '再来一次'
+                        : done > 0
+                          ? '继续练'
+                          : task.type === 'upload'
+                            ? '播放视频'
+                            : '打开 / 播放'}
                     </button>
+                    {/* 「打卡」按钮保持 disabled={finished} 不动：它才是防超额的闸门，不许放开 */}
                     <button
                       type="button"
                       onClick={() => void doCheckin(task)}

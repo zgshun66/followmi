@@ -100,13 +100,16 @@ export default function VideoPlayer({ task, remaining, onComplete, onClose }: Vi
     }
   };
 
-  const mainDisabled = finished || busy;
-  const mainLabel = finished ? '已打卡 ✓' : started ? '再来一次' : '标记完成';
-  const mainOnClick = finished ? undefined : started ? replay : markComplete;
+  // 额度用完也不把主按钮变灰：改成「再来一次」继续重播。
+  // 重播绝不记打卡——闸门在 markComplete 的 if (finished || busy) return，replay 根本不碰它。
+  const mainDisabled = busy;
+  const mainLabel = started || finished ? '再来一次' : '标记完成';
+  const mainOnClick = started || finished ? replay : markComplete;
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-ink">
-      <div className="flex items-center justify-between px-4 py-3 text-cream">
+      {/* 标题栏 shrink-0：任何情况下都留在顶部，不被视频挤走 */}
+      <div className="flex shrink-0 items-center justify-between px-4 py-3 text-cream">
         <span className="truncate font-semibold">{task.name}</span>
         <button
           type="button"
@@ -117,14 +120,16 @@ export default function VideoPlayer({ task, remaining, onComplete, onClose }: Vi
         </button>
       </div>
 
-      <div className="flex flex-1 items-center justify-center bg-black">
+      {/* 视频区 min-h-0 + overflow-hidden：让这格能真正收缩到比视频本身更矮，
+          竖版大视频就不会把下面的按钮顶出视口；视频 h-full w-full object-contain 等比缩放、绝不溢出 */}
+      <div className="flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-black">
         {url ? (
           <video
             ref={videoRef}
             src={url}
             controls
             playsInline
-            className="max-h-full max-w-full bg-black"
+            className="h-full w-full bg-black object-contain"
             onEnded={markComplete}
           />
         ) : (
@@ -132,10 +137,14 @@ export default function VideoPlayer({ task, remaining, onComplete, onClose }: Vi
         )}
       </div>
 
-      <div className="flex flex-col gap-3 p-4">
-        {!finished && (
-          <p className="text-center text-xs text-cream/60">今日还差 {remaining} 次，练完自动记一次</p>
-        )}
+      {/* 底部按钮栏 shrink-0 + 安全区内边距：始终可见可点，且不被 iPhone 底部横条挡住 */}
+      <div
+        className="flex shrink-0 flex-col gap-3 p-4"
+        style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}
+      >
+        <p className="text-center text-xs text-cream/60">
+          {finished ? '今日已完成，想多练几遍随时点「再来一次」' : `今日还差 ${remaining} 次，练完自动记一次`}
+        </p>
         <div className="flex gap-2">
           <button
             type="button"

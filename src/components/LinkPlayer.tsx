@@ -118,6 +118,8 @@ export default function LinkPlayer({ task, remaining, onComplete, onClose }: Lin
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copyFailed, setCopyFailed] = useState(false);
+  // 内嵌 iframe 的重挂计数：点「再来一次」时 +1，换 key 让 iframe 从头重建，相当于重播。
+  const [embedKey, setEmbedKey] = useState(0);
   const copyTimer = useRef<number | null>(null);
   const unlockTimer = useRef<number | null>(null);
 
@@ -148,6 +150,17 @@ export default function LinkPlayer({ task, remaining, onComplete, onClose }: Lin
     // 光靠它会把按钮永久禁用。挂一个一次性计时器，无论如何都恢复可点。
     if (unlockTimer.current !== null) window.clearTimeout(unlockTimer.current);
     unlockTimer.current = window.setTimeout(() => setBusy(false), UNLOCK_FALLBACK_MS);
+  };
+
+  // 再来一次：额度用完后不记打卡，只把内容重开一遍。
+  // - 能内嵌的（iframe）换 key 强制重挂，从头再播；
+  // - 只有外链的，就再走一遍「打开原链接」。
+  const replay = () => {
+    if (embed) {
+      setEmbedKey((k) => k + 1);
+    } else if (linkUrl) {
+      openExternal(linkUrl);
+    }
   };
 
   // 复制成功后把按钮文案临时切成「已复制 ✓」，1.6 秒后复原。
@@ -233,9 +246,22 @@ export default function LinkPlayer({ task, remaining, onComplete, onClose }: Lin
     </>
   );
 
+  // 主按钮文案按「点下去到底会不会离开 follow咪」来定口径：
+  // - 能内嵌就地重播的（embed）→ 「再来一次」；
+  // - 只有外链、点开等于导航走的 → 诚实地说「去原站再练」，别拿「再来一次」骗人；
+  // - 还没开始 → 「标记完成」。
+  const mainLabel = finished
+    ? embed
+      ? '再来一次'
+      : '去原站再练'
+    : started
+      ? '再来一次'
+      : '标记完成';
+
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-ink">
-      <div className="flex items-center justify-between px-4 py-3 text-cream">
+      {/* 标题栏 shrink-0：任何情况下都留在顶部 */}
+      <div className="flex shrink-0 items-center justify-between px-4 py-3 text-cream">
         <span className="truncate font-semibold">{task.name}</span>
         <button
           type="button"
@@ -249,7 +275,7 @@ export default function LinkPlayer({ task, remaining, onComplete, onClose }: Lin
       <div className="flex-1 overflow-auto bg-ink px-4 pb-4">
         {embed ? (
           <>
-            <div className="embed-shell" dangerouslySetInnerHTML={{ __html: embed }} />
+            <div key={embedKey} className="embed-shell" dangerouslySetInnerHTML={{ __html: embed }} />
             <p className="mt-3 text-center text-xs leading-relaxed text-cream/60">
               若播放器提示「无法播放」（部分视频有版权 / 地区限制），点下面的按钮去原站看。
             </p>
@@ -268,15 +294,25 @@ export default function LinkPlayer({ task, remaining, onComplete, onClose }: Lin
         )}
       </div>
 
-      <div className="p-4">
-        {!finished && <p className="mb-2 text-center text-xs text-cream/60">今日还差 {remaining} 次</p>}
+      {/* 底部栏 shrink-0 + 安全区内边距：与 VideoPlayer 一致，始终可见可点 */}
+      <div
+        className="shrink-0 p-4"
+        style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}
+      >
+        <p className="mb-2 text-center text-xs text-cream/60">
+          {finished
+            ? embed
+              ? '今日已完成，想多练几遍随时点「再来一次」'
+              : '今日已完成，想再练一遍点「去原站再练」就行'
+            : `今日还差 ${remaining} 次`}
+        </p>
         <button
           type="button"
-          onClick={markComplete}
-          disabled={finished || busy}
+          onClick={finished ? replay : markComplete}
+          disabled={busy}
           className="w-full rounded-xl bg-leaf py-3 font-bold text-cream disabled:opacity-50"
         >
-          {finished ? '已打卡 ✓' : started ? '再来一次' : '标记完成'}
+          {mainLabel}
         </button>
       </div>
     </div>
